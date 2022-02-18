@@ -12,12 +12,12 @@ Vagrant.configure("2") do |config|
 
   # Every Vagrant development environment requires a box. You can search for
   # boxes at https://vagrantcloud.com/search.
-  config.vm.box = "generic/debian9"
+  config.vm.box = "generic/debian11"
 
   # Disable automatic box update checking. If you disable this, then
   # boxes will only be checked for updates when the user runs
   # `vagrant box outdated`. This is not recommended.
-  # config.vm.box_check_update = false
+  config.vm.box_check_update = false
 
   config.vm.network "forwarded_port", guest: 8080, host: 8080
 
@@ -49,16 +49,17 @@ Vagrant.configure("2") do |config|
   end
 
   config.vm.provider "virtualbox" do |vb|
-    # "3D Sound" audio device
     vb.customize ["usbfilter", "add", "0",
         "--target", :id,
-        "--name", "Generic USB Audio Device",
-        "--product", "Generic USB Audio Device"]
+        "--name", "Belkin USB PDA Adapter",
+        "--vendorid", "050D",
+        "--productid", "0109"]
+    # "3D Sound" audio device
+    # vb.customize ["usbfilter", "add", "1",
+    #     "--target", :id,
+    #     "--name", "Generic USB Audio Device",
+    #     "--product", "Generic USB Audio Device"]
     # TODO: change this for my specific USB serial port
-    vb.customize ["usbfilter", "add", "1",
-        "--target", :id,
-        "--name", "Any Cruzer Glide",
-        "--product", "Cruzer Glide"]
   end
 
   # Enable provisioning with a shell script. Additional provisioners such as
@@ -67,8 +68,20 @@ Vagrant.configure("2") do |config|
   config.vm.provision "shell", inline: <<-SHELL
     wget -q https://github.com/la5nta/pat/releases/download/v0.12.1/pat_0.12.1_linux_amd64.deb
     dpkg -i pat*.deb
-    sudo systemctl enable pat@vagrant
+    apt-get install -y usbutils
+    apt-get install -y minicom
+    usermod -G dialout -a vagrant
+    systemctl enable pat@vagrant
+    systemctl start pat@vagrant
+    wget -q https://golang.org/dl/go1.17.linux-amd64.tar.gz
+    sudo tar -C /usr/local -xzf go1.17.linux-amd64.tar.gz
+    echo "export PATH=/usr/local/go/bin:$PATH" >> ~vagrant/.profile
+    echo "export GOPATH=~/.go" >> ~vagrant/.profile
+    su vagrant mkdir ~vagrant/src
+    cd ~vagrant/src
+    su vagrant git clone https://github.com/la5nta/pat.git
   SHELL
   config.vm.provision "pat-config", type: "file", source: "~/Library/Application Support/pat/config.json", destination: "~vagrant/.config/pat/config.json"
+  config,vm.provision "minicom", type: "file", source: "minirc.dfl"
 
 end
