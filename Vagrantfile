@@ -75,13 +75,14 @@ Vagrant.configure("2") do |config|
     systemctl start pat@vagrant
     wget -q https://golang.org/dl/go1.17.linux-amd64.tar.gz
     sudo tar -C /usr/local -xzf go1.17.linux-amd64.tar.gz
-    echo "export PATH=/usr/local/go/bin:$PATH" >> ~vagrant/.profile
+    echo "export PATH=/usr/local/go/bin:$PATH:~/.go/bin" >> ~vagrant/.profile
     echo "export GOPATH=~/.go" >> ~vagrant/.profile
+    /usr/local/go/bin/go install github.com/go-delve/delve/cmd/dlv@latest
     su vagrant mkdir ~vagrant/src
     cd ~vagrant/src
     su vagrant git clone https://github.com/la5nta/pat.git
   SHELL
   config.vm.provision "pat-config", type: "file", source: "~/Library/Application Support/pat/config.json", destination: "~vagrant/.config/pat/config.json"
-  config,vm.provision "minicom", type: "file", source: "minirc.dfl"
+  config.vm.provision "minicom", type: "file", source: "minirc.dfl"
 
 end
