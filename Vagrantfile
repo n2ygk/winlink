@@ -1,6 +1,11 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
 
+required_plugins = %w( vagrant-cachier vagrant-vbguest )
+required_plugins.each do |plugin|
+    exec "vagrant plugin install #{plugin};vagrant #{ARGV.join(" ")}" unless Vagrant.has_plugin? plugin || ARGV[0] == 'plugin'
+end
+
 # All Vagrant configuration is done below. The "2" in Vagrant.configure
 # configures the configuration version (we support older styles for
 # backwards compatibility). Please don't change it unless you know what
@@ -27,6 +32,8 @@ Vagrant.configure("2") do |config|
   # argument is a set of non-required options.
   # config.vm.synced_folder "../data", "/vagrant_data"
 
+  config.vm.synced_folder "~/Library/Application Support/pat/mailbox", "/home/vagrant/.local/share/pat/mailbox"
+
   # Provider-specific configuration so you can fine-tune various
   # backing providers for Vagrant. These expose provider-specific options.
   # Example for VirtualBox:
@@ -46,6 +53,7 @@ Vagrant.configure("2") do |config|
   config.vm.provider "virtualbox" do |vb|
     vb.customize ["modifyvm", :id, "--usb", "on"]
     vb.customize ["modifyvm", :id, "--usbehci", "on"]
+    vb.customize [ "guestproperty", "set", :id, "/VirtualBox/GuestAdd/VBoxService/--timesync-set-threshold", 10000 ]
   end
 
   config.vm.provider "virtualbox" do |vb|
@@ -70,19 +78,32 @@ Vagrant.configure("2") do |config|
     dpkg -i pat*.deb
     apt-get install -y usbutils
     apt-get install -y minicom
+    apt-get install -y ax25-tools
+    apt-get install -y ax25-apps
+    apt-get install -y tmd710-tncsetup
     usermod -G dialout -a vagrant
+    echo "wl2k N2YGK 9600 255 7 Winlink" >/etc/ax25/axports
+    /usr/share/pat/ax25/install-systemd-ax25-unit.bash
+    echo 'TNC_INIT_CMD="/usr/bin/tmd710_tncsetup -B 1 -S $DEV -b $HBAUD' >>/etc/default/ax25
+    systemctl enable ax25
+    systemctl start ax25
+    systemctl status ax25 -l
+    su vagrant -c "pat updateforms"
     systemctl enable pat@vagrant
     systemctl start pat@vagrant
+    systemctl status pat@vagrant -l
+    # following to build from source:
     wget -q https://golang.org/dl/go1.17.linux-amd64.tar.gz
     sudo tar -C /usr/local -xzf go1.17.linux-amd64.tar.gz
     echo "export PATH=/usr/local/go/bin:$PATH:~/.go/bin" >> ~vagrant/.profile
     echo "export GOPATH=~/.go" >> ~vagrant/.profile
     /usr/local/go/bin/go install github.com/go-delve/delve/cmd/dlv@latest
-    su vagrant mkdir ~vagrant/src
+    mkdir ~vagrant/src
     cd ~vagrant/src
-    su vagrant git clone https://github.com/la5nta/pat.git
+    git clone https://github.com/la5nta/pat.git
+    chown -R vagrant ~vagrant/.local
   SHELL
   config.vm.provision "pat-config", type: "file", source: "~/Library/Application Support/pat/config.json", destination: "~vagrant/.config/pat/config.json"
-  config.vm.provision "minicom", type: "file", source: "minirc.dfl"
+  config.vm.provision "minicom", type: "file", source: "minirc.dfl", destination: "/etc/minicom/minirc.dlf"
 
 end
