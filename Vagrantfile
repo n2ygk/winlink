@@ -62,12 +62,17 @@ Vagrant.configure("2") do |config|
         "--name", "Belkin USB PDA Adapter",
         "--vendorid", "050D",
         "--productid", "0109"]
-    # "3D Sound" audio device
-    # vb.customize ["usbfilter", "add", "1",
+    # GPS
+    vb.customize ["usbfilter", "add", "1",
+        "--target", :id,
+        "--name", "VFAN GPS",
+        "--vendorid", "1546",
+        "--productid", "01A7"]
+    # TODO: "3D Sound" audio device use vendorid/productid
+    # vb.customize ["usbfilter", "add", "2",
     #     "--target", :id,
     #     "--name", "Generic USB Audio Device",
     #     "--product", "Generic USB Audio Device"]
-    # TODO: change this for my specific USB serial port
   end
 
   # Enable provisioning with a shell script. Additional provisioners such as
@@ -81,17 +86,29 @@ Vagrant.configure("2") do |config|
     apt-get install -y ax25-tools
     apt-get install -y ax25-apps
     apt-get install -y tmd710-tncsetup
+    apt-get install -y gpsd
     usermod -G dialout -a vagrant
+    usermod -G root -a gpsd
+    # GPSD
+    sed -i.bak -e 's:DEVICES="":DEVICES="/dev/ttyACM0":' \
+               -e 's:USBAUTO.*$:USBAUTO="false":' /etc/default/gpsd
+    echo 'GPSD_SOCKET="/run/gpsd.sock"' >> /etc/default/gpsd
+    sed -i.bak -e 's/BindIPv6Only=yes/BindIPv6Only=no/' /lib/systemd/system/gpsd.socket
+    systemctl enable gpsd
+    systemctl start gpsd
+    systemctl status gpsd
+    # AX25
     echo "wl2k N2YGK 9600 255 7 Winlink" >/etc/ax25/axports
     /usr/share/pat/ax25/install-systemd-ax25-unit.bash
     echo 'TNC_INIT_CMD="/usr/bin/tmd710_tncsetup -B 1 -S $DEV -b $HBAUD' >>/etc/default/ax25
     systemctl enable ax25
     systemctl start ax25
-    systemctl status ax25 -l
+    systemctl status ax25
+    # PAT
     su vagrant -c "pat updateforms"
     systemctl enable pat@vagrant
     systemctl start pat@vagrant
-    systemctl status pat@vagrant -l
+    systemctl status pat@vagrant
     # following to build from source:
     wget -q https://golang.org/dl/go1.17.linux-amd64.tar.gz
     sudo tar -C /usr/local -xzf go1.17.linux-amd64.tar.gz
@@ -104,6 +121,7 @@ Vagrant.configure("2") do |config|
     chown -R vagrant ~vagrant/.local
   SHELL
   config.vm.provision "pat-config", type: "file", source: "~/Library/Application Support/pat/config.json", destination: "~vagrant/.config/pat/config.json"
-  config.vm.provision "minicom", type: "file", source: "minirc.dfl", destination: "/etc/minicom/minirc.dlf"
+  # this doesn't work due to permissions:
+  config.vm.provision "minicom", type: "file", source: "minirc.dfl", destination: "/etc/minicom/minirc.dfl"
 
 end
