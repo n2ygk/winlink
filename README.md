@@ -5,6 +5,16 @@ Since MacOS broke support for serial USB devices a long time ago, this configure
 VirtualBox Debian Linux machine using vagrant, connected to my Kenwood TM-D710 mobile
 rig via Linux ax.25 in KISS mode. See the [Vagrantfile](./Vagrantfile) for details.
 
+## Set up gpsd
+
+It's supposed to just work as it's configured with udev hotplug but apparently
+ipv6 is not configured properly so I had to do this:
+
+```
+sed -i.bak -e 's/^BindIPv6Only=yes/#BindIPv6Only=yes/' \
+           -e 's/^ListenStream=[::1]:2947/#ListenStream=[::1]:2947/' /lib/systemd/system/gpsd.socket
+```
+
 ## Set up pat
 
 Initial setup involves running `pat configure` on the Mac to set the various

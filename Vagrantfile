@@ -45,13 +45,6 @@ Vagrant.configure("2") do |config|
                       type: "file",
                       source: "minirc.dfl",
                       destination: "~vagrant/.minirc.dfl"
-  # GPSD config not working yet
-  if ENV["GPSD"]
-    config.vm.provision "start-gpsd",
-                        type: "shell",
-                        path: "start-gpsd.sh",
-                        run: "always"
-  end
   config.vm.provision "start-ax25",
                       type: "shell",
                       path: "start-ax25.sh",
@@ -70,6 +63,7 @@ Vagrant.configure("2") do |config|
                       run: "never"
   config.vm.post_up_message = <<-EoF
     Use 'vagrant provision --provision-with dev' to install PAT source code.
-    Use 'vagrant provision --provision-with start' to restart gpsd, ax25, and pat.
+    Use 'vagrant provision --provision-with start' to restart ax25, and pat.
+    Use 'You may have to replug the USB GPS to get it to be recognized.
   EoF
 end
