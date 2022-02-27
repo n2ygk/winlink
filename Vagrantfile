@@ -45,10 +45,13 @@ Vagrant.configure("2") do |config|
                       type: "file",
                       source: "minirc.dfl",
                       destination: "~vagrant/.minirc.dfl"
-  config.vm.provision "start-gpsd",
-                      type: "shell",
-                      path: "start-gpsd.sh",
-                      run: "always"
+  # GPSD config not working yet
+  if ENV["GPSD"]
+    config.vm.provision "start-gpsd",
+                        type: "shell",
+                        path: "start-gpsd.sh",
+                        run: "always"
+  end
   config.vm.provision "start-ax25",
                       type: "shell",
                       path: "start-ax25.sh",
