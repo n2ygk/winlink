@@ -1,6 +1,7 @@
 #!/bin/bash
 # the one true editor:
 apt-get install -y emacs
+apt-get install -y golang-mode
 # following to build from source:
 wget -q https://golang.org/dl/go1.17.linux-amd64.tar.gz
 sudo tar -C /usr/local -xzf go1.17.linux-amd64.tar.gz
@@ -9,4 +10,9 @@ echo "export GOPATH=~/.go" >> ~vagrant/.profile
 /usr/local/go/bin/go install github.com/go-delve/delve/cmd/dlv@latest
 mkdir ~vagrant/src
 cd ~vagrant/src
-git clone https://github.com/la5nta/pat.git
+# clone my development fork
+git clone git@github.com:n2ygk/pat.git
+cd pat
+git remote add upstream git@github.com:la5nta/pat.git
+cd ~/vagrant/src
+chown -R vagrant .
