@@ -57,24 +57,22 @@ Vagrant.configure("2") do |config|
                       type: "shell",
                       path: "start.sh",
                       run: "never"
-  config.vm.provision "dev",
-                      type: "shell",
-                      path: "dev.sh",
-                      run: "never"
   config.vm.provision "gitconfig",
                       type: "file",
                       source: "~/.gitconfig",
                       destination: ".gitconfig",
-                      run: "never"
+                      run: "always"
   config.vm.provision "ssh",
                       type: "file",
                       source: "~/.ssh/id_rsa",
                       destination: ".ssh/id_rsa",
+                      run: "always"
+  config.vm.provision "dev",
+                      type: "shell",
+                      path: "dev.sh",
                       run: "never"
   config.vm.post_up_message = <<-EoF
     Use 'vagrant provision --provision-with dev' to install PAT source code.
-    Use 'vagrant provision --provision-with gitconfig' to install git config.
-    Use 'vagrant provision --provision-with ssh' to install ssh keys.
     Use 'vagrant provision --provision-with start' to restart ax25, and pat.
     Use 'You may have to replug the USB GPS to get it to be recognized.
   EoF
