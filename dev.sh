@@ -1,4 +1,6 @@
 #!/bin/bash
+# the one true editor:
+apt-get install -y emacs
 # following to build from source:
 wget -q https://golang.org/dl/go1.17.linux-amd64.tar.gz
 sudo tar -C /usr/local -xzf go1.17.linux-amd64.tar.gz
