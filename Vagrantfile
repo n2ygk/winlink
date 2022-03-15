@@ -12,6 +12,8 @@ Vagrant.configure("2") do |config|
   config.vm.network "forwarded_port", guest: 8080, host: 8080
   config.vm.synced_folder "~/Library/Application Support/pat/mailbox", "/home/vagrant/.local/share/pat/mailbox"
   config.vm.synced_folder ".", "/vagrant"
+  config.vm.synced_folder "~/src", "/home/vagrant/src"
+  config.vm.synced_folder "~/.gnupg", "/home/vagrant/.gnupg"
   # Enable USB Controller on VirtualBox
   config.vm.provider "virtualbox" do |vb|
     vb.customize ["modifyvm", :id, "--usb", "on"]
@@ -45,28 +47,29 @@ Vagrant.configure("2") do |config|
                       type: "file",
                       source: "minirc.dfl",
                       destination: "~vagrant/.minirc.dfl"
-  config.vm.provision "start-ax25",
-                      type: "shell",
-                      path: "start-ax25.sh",
+  config.vm.provision "gitconfig",
+                      type: "file",
+                      source: "~/.gitconfig",
+                      destination: "~vagrant/.gitconfig",
+                      run: "always"
+  config.vm.provision "ssh",
+                      type: "file",
+                      source: "~/.ssh/id_rsa",
+                      destination: "~vagrant/.ssh/id_rsa",
                       run: "always"
   config.vm.provision "start-pat",
                       type: "shell",
                       path: "start-pat.sh",
                       run: "always"
+  # this will fail if the serial port is not connected.
+  config.vm.provision "start-ax25",
+                      type: "shell",
+                      path: "start-ax25.sh",
+                      run: "always"
   config.vm.provision "start",
                       type: "shell",
                       path: "start.sh",
                       run: "never"
-  config.vm.provision "gitconfig",
-                      type: "file",
-                      source: "~/.gitconfig",
-                      destination: ".gitconfig",
-                      run: "always"
-  config.vm.provision "ssh",
-                      type: "file",
-                      source: "~/.ssh/id_rsa",
-                      destination: ".ssh/id_rsa",
-                      run: "always"
   config.vm.provision "dev",
                       type: "shell",
                       path: "dev.sh",
