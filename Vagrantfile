@@ -29,11 +29,16 @@ Vagrant.configure("2") do |config|
         "--name", "VFAN GPS",
         "--vendorid", "1546",
         "--productid", "01A7"]
-    # TODO: "3D Sound" audio device use vendorid/productid
-    # vb.customize ["usbfilter", "add", "2",
-    #     "--target", :id,
-    #     "--name", "Generic USB Audio Device",
-    #     "--product", "Generic USB Audio Device"]
+    vb.customize ["usbfilter", "add", "2",
+        "--target", :id,
+        "--name", "Generic USB Audio Device",
+        "--vendorid", "0D8C",
+        "--productid", "000E"]
+    vb.customize ["usbfilter", "add", "3",
+        "--target", :id,
+        "--name", "Generalplus Technology Inc. USB Audio Device",
+        "--vendorid", "1B3F",
+        "--productid", "2008"]
   end
 
   config.vm.provision "install",
