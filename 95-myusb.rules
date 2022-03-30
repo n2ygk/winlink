@@ -1,0 +1,2 @@
+ACTION=="add", ATTRS{idVendor}=="050d", ATTRS{idProduct}=="0109", SYMLINK="mytnc", TAG+="systemd"
+
