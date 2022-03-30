@@ -1,0 +1,13 @@
+[Unit]
+Description=AX.25 KISS interface
+After=network.target
+BindsTo=sys-devices-pci0000:00-0000:00:06.0-usb2-2\x2d1-2\x2d1:1.0-ttyUSB0-tty-ttyUSB0.device
+
+[Service]
+EnvironmentFile=/etc/default/ax25
+Type=forking
+ExecStart=/usr/share/pat/bin/axup ${DEV} ${AXPORT} ${HBAUD}
+
+[Install]
+#WantedBy=default.target
+WantedBy=sys-devices-pci0000:00-0000:00:06.0-usb2-2\x2d1-2\x2d1:1.0-ttyUSB0-tty-ttyUSB0.device

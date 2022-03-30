@@ -3,7 +3,7 @@
 This is my [pat](https://github.com/la5nta/pat) Winlink configuration on my Mac.
 Since MacOS broke support for serial USB devices a long time ago, this configures a
 VirtualBox Debian Linux machine using vagrant, connected to my Kenwood TM-D710 mobile
-rig via Linux ax.25 in KISS mode. See the [Vagrantfile](./Vagrantfile) for details.
+rig via Linux ax.25 with a serial USB port in KISS mode. See the [Vagrantfile](./Vagrantfile) for details.
 
 ## Set up gpsd
 
@@ -14,6 +14,42 @@ ipv6 is not configured properly so I had to do this:
 sed -i.bak -e 's/^BindIPv6Only=yes/#BindIPv6Only=yes/' \
            -e 's/^ListenStream=[::1]:2947/#ListenStream=[::1]:2947/' /lib/systemd/system/gpsd.socket
 ```
+
+## Set up AX25 KISS
+
+The Pat debian package installs a default /lib/systemd/system/ax25.service but I want it to automatically
+do the kissattach only when the USB serial port is plugged in.
+This [Starting services on hotplug](https://unrouted.io/systemd/2017/05/21/starting-services-on-hotplug/) article
+was really helpful in figuring out how to do that.
+
+In summary, you have to find the name of your specific hotplug device and then update `ax25.service` to reference by
+adding `Unit.BindsTo` and `Install.WantedBy` to reference that device.
+
+```
+root@debian11:/home/vagrant# systemctl |grep ttyUSB
+  sys-devices-pci0000:00-0000:00:06.0-usb2-2\x2d1-2\x2d1:1.0-ttyUSB0-tty-ttyUSB0.device     loaded active plugged   KeyLargo/Intrepid USB
+```
+
+In this example, my device is named `sys-devices-pci0000:00-0000:00:06.0-usb2-2\x2d1-2\x2d1:1.0-ttyUSB0-tty-ttyUSB0.device`, so
+here's my changed `ax25.service` which adds `BindsTo` and updates `WantedBy`.
+
+```
+[Unit]
+Description=AX.25 KISS interface
+After=network.target
+BindsTo=sys-devices-pci0000:00-0000:00:06.0-usb2-2\x2d1-2\x2d1:1.0-ttyUSB0-tty-ttyUSB0.device
+
+[Service]
+EnvironmentFile=/etc/default/ax25
+Type=forking
+ExecStart=/usr/share/pat/bin/axup ${DEV} ${AXPORT} ${HBAUD}
+
+[Install]
+#WantedBy=default.target
+WantedBy=sys-devices-pci0000:00-0000:00:06.0-usb2-2\x2d1-2\x2d1:1.0-ttyUSB0-tty-ttyUSB0.device
+```
+
+TODO: /etc/default/ax25 sets `DEV=/dev/ttyUSB0` so perhaps that needs to be set dynamically as well.
 
 ## Set up pat
 
