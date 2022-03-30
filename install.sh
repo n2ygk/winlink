@@ -18,10 +18,16 @@ sed -i.bak -e 's/^BindIPv6Only=yes/#BindIPv6Only=yes/' \
 # winlink/pat:
 echo "wl2k N2YGK 9600 255 7 Winlink" >/etc/ax25/axports
 /usr/share/pat/ax25/install-systemd-ax25-unit.bash
+sed -i.bak -e 's/ttyUSB0/mytnc/' /etc/default/ax25
 echo 'TNC_INIT_CMD="/usr/bin/tmd710_tncsetup -B 1 -S $DEV -b $HBAUD' >>/etc/default/ax25
 chown -R vagrant ~vagrant/.local
 # pat.dpkg installs the ax25.service
 # customize ax25 to hotplug start/stop when the USB serial adapter is plugged in:
+# this gives us a consistent name irrespective of USB port number:
+cp /vagrant/95-myusb.rules /lib/udev/rules.d/
+# and this references it:
 cp /vagrant/ax25.service /lib/systemd/system/
+systemctl daemon-reload
+systemctl disable ax25
 systemctl enable ax25
 systemctl enable pat@vagrant

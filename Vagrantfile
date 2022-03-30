@@ -67,10 +67,10 @@ Vagrant.configure("2") do |config|
                       path: "start-pat.sh",
                       run: "always"
   # this will fail if the serial port is not connected.
-  config.vm.provision "start-ax25",
-                      type: "shell",
-                      path: "start-ax25.sh",
-                      run: "always"
+  # config.vm.provision "start-ax25",
+  #                     type: "shell",
+  #                     path: "start-ax25.sh",
+  #                     run: "always"
   config.vm.provision "start",
                       type: "shell",
                       path: "start.sh",

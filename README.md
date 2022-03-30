@@ -30,15 +30,23 @@ root@debian11:/home/vagrant# systemctl |grep ttyUSB
   sys-devices-pci0000:00-0000:00:06.0-usb2-2\x2d1-2\x2d1:1.0-ttyUSB0-tty-ttyUSB0.device     loaded active plugged   KeyLargo/Intrepid USB
 ```
 
-In this example, my device is named `sys-devices-pci0000:00-0000:00:06.0-usb2-2\x2d1-2\x2d1:1.0-ttyUSB0-tty-ttyUSB0.device`, so
+Unfortunately, this name varies based on order of USB devices that are hot-plugged. So we need to add a udev
+rule to fix that:
+
+`/lib/udev/rules.d/95-myusb.rules` make sure this particular USB serial adapter gets a symlink of `/dev/mytnc`:
+
+```
+ACTION=="add", ATTRS{idVendor}=="050d", ATTRS{idProduct}=="0109", SYMLINK="mytnc", TAG+="systemd"
+```
+
+In this example, my device is symlinked as `/dev/mytnc`, so
 here's my changed `ax25.service` which adds `BindsTo` and updates `WantedBy`.
 
 ```
 [Unit]
 Description=AX.25 KISS interface
 After=network.target
-BindsTo=sys-devices-pci0000:00-0000:00:06.0-usb2-2\x2d1-2\x2d1:1.0-ttyUSB0-tty-ttyUSB0.device
-
+BindsTo=dev-mytnc.device
 [Service]
 EnvironmentFile=/etc/default/ax25
 Type=forking
@@ -46,7 +54,7 @@ ExecStart=/usr/share/pat/bin/axup ${DEV} ${AXPORT} ${HBAUD}
 
 [Install]
 #WantedBy=default.target
-WantedBy=sys-devices-pci0000:00-0000:00:06.0-usb2-2\x2d1-2\x2d1:1.0-ttyUSB0-tty-ttyUSB0.device
+WantedBy=dev-mytnc.device
 ```
 
 TODO: /etc/default/ax25 sets `DEV=/dev/ttyUSB0` so perhaps that needs to be set dynamically as well.
