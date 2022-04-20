@@ -39,6 +39,11 @@ Vagrant.configure("2") do |config|
         "--name", "Generalplus Technology Inc. USB Audio Device",
         "--vendorid", "1B3F",
         "--productid", "2008"]
+    vb.customize ["usbfilter", "add", "4",
+        "--target", :id,
+        "--name", "DINAH USB PTT modem",
+        "--vendorid", "0D8C",
+        "--productid", "0012"]
   end
 
   config.vm.provision "install",
