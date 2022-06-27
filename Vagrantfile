@@ -10,6 +10,8 @@ Vagrant.configure("2") do |config|
   config.vm.box = "generic/debian11"
   config.vm.box_check_update = false
   config.vm.network "forwarded_port", guest: 8080, host: 8080
+  config.ssh.forward_agent = true
+  config.ssh.forward_x11 = true
   config.vm.synced_folder "~/Library/Application Support/pat/mailbox", "/home/vagrant/.local/share/pat/mailbox"
   config.vm.synced_folder ".", "/vagrant"
   config.vm.synced_folder "~/src", "/home/vagrant/src"
