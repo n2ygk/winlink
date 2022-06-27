@@ -1,14 +1,23 @@
 #!/bin/bash
 # scripted setup invoked from Vagrantfile.
 # runs as root.
+
+sed -i.bak -e 's/^#AddressFamily.*$/AddressFamily inet/' /etc/ssh/sshd_config
+systemctl reload sshd
 wget -q https://github.com/la5nta/pat/releases/download/v0.12.1/pat_0.12.1_linux_amd64.deb
 dpkg -i pat*.deb
+apt-get update
+apt-get install -y xauth
 apt-get install -y usbutils
+apt-get install -y gpsd
 apt-get install -y minicom
 apt-get install -y ax25-tools
 apt-get install -y ax25-apps
 apt-get install -y tmd710-tncsetup
-apt-get install -y gpsd
+apt-get install -y soundmodem
+apt-get install -y alsa-utils
+# apt-get install -y libasound2-dev
+# apt-get install -y libudev-dev
 usermod -G dialout -a vagrant
 # not sure if this is required
 # usermod -G root -a gpsd
