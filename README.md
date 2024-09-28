@@ -1,9 +1,23 @@
-# Pat on my Mac
+# Pat on my Mac using Virtualbox
+
+<!-- toc -->
+
+- [Set up gpsd](#set-up-gpsd)
+- [Set up AX25 KISS](#set-up-ax25-kiss)
+- [Set up pat](#set-up-pat)
+- [Run pat](#run-pat)
+- [Pat Mailbox](#pat-mailbox)
+- [Compiling and debugging pat source code](#compiling-and-debugging-pat-source-code)
+- [Vagrant Provisioning](#vagrant-provisioning)
+
+<!-- tocstop -->
 
 This is my [pat](https://github.com/la5nta/pat) Winlink configuration on my Mac.
 Since MacOS broke support for serial USB devices a long time ago, this configures a
 VirtualBox Debian Linux machine using vagrant, connected to my Kenwood TM-D710 mobile
 rig via Linux ax.25 with a serial USB port in KISS mode. See the [Vagrantfile](./Vagrantfile) for details.
+
+Note: I've started configuring soundmodem as well but this is currently incomplete.
 
 ## Set up gpsd
 
@@ -14,6 +28,8 @@ ipv6 is not configured properly so I had to do this:
 sed -i.bak -e 's/^BindIPv6Only=yes/#BindIPv6Only=yes/' \
            -e 's/^ListenStream=[::1]:2947/#ListenStream=[::1]:2947/' /lib/systemd/system/gpsd.socket
 ```
+
+Use `gpsmon` to monitor the GPS.
 
 ## Set up AX25 KISS
 
@@ -57,7 +73,7 @@ ExecStart=/usr/share/pat/bin/axup ${DEV} ${AXPORT} ${HBAUD}
 WantedBy=dev-mytnc.device
 ```
 
-TODO: /etc/default/ax25 sets `DEV=/dev/ttyUSB0` so perhaps that needs to be set dynamically as well.
+etc/default/ax25 sets `DEV=/dev/ttyUSB0` so change it to `/dev/mytnc`. See [install.sh](./install.sh)
 
 ## Set up pat
 
@@ -105,9 +121,20 @@ to `vagrant destroy` and rebuild as needed.
 The `Vagrantfile` also installs an appropriate version of golang and the
 pat git repo along with the [delve](github.com/go-delve/delve) debugger.
 
+## Vagrant Provisioning
 
+To build and run this from scratch, simply do `vagrant up`.
 
+Once configured, there are a number of Vagrant provisioner scripts defined
+that you can invoke via `vagrant provision --provision-with <provisioner>`
 
-
-
-
+| \<provisioner\> | function | see |
+| ----------- | -------- | --- |
+| install     | installs pat, ax25, etc. | [install.sh](./install.sh) |
+| start       | start ax25 and pat | [start.sh](./start.sh) |
+| pat-config  | copies my MacOS Pat config into the vagrant box | \~/Library/Application Support/pat/config.json |
+| minicom     | configures mincom defaults | [minirc.dfl](./minirc.dfl) |
+| gitconfig   | copies my personal .gitconfig into the vagrant box | \~/.gitconfig |
+| ssh         | copes my personal ssh keys into the vagrant box | \~/.ssh/id_rsa |
+| start-pat   | start up the Pat web server | [start-pat.sh](./start-pat.sh) |
+| dev         | set vagrant box up for local pat development | [dev.sh](./dev.sh) |
