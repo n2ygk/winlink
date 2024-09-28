@@ -4,7 +4,7 @@
 
 sed -i.bak -e 's/^#AddressFamily.*$/AddressFamily inet/' /etc/ssh/sshd_config
 systemctl reload sshd
-wget -q https://github.com/la5nta/pat/releases/download/v0.13.0/pat_0.13.0_linux_amd64.deb
+wget -q https://github.com/la5nta/pat/releases/download/v0.16.0/pat_0.16.0_linux_amd64.deb
 dpkg -i pat*.deb
 apt-get update
 apt-get install -y xauth
@@ -28,7 +28,7 @@ sed -i.bak -e 's/^BindIPv6Only=yes/#BindIPv6Only=yes/' \
 echo "wl2k N2YGK 9600 255 7 Winlink" >/etc/ax25/axports
 /usr/share/pat/ax25/install-systemd-ax25-unit.bash
 sed -i.bak -e 's/ttyUSB0/mytnc/' /etc/default/ax25
-echo 'TNC_INIT_CMD="/usr/bin/tmd710_tncsetup -B 1 -S $DEV -b $HBAUD' >>/etc/default/ax25
+echo 'TNC_INIT_CMD="/usr/bin/tmd710_tncsetup -B 1 -S $DEV -b $HBAUD"' >>/etc/default/ax25
 chown -R vagrant ~vagrant/.local
 # pat.dpkg installs the ax25.service
 # customize ax25 to hotplug start/stop when the USB serial adapter is plugged in:
