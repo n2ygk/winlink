@@ -4,7 +4,7 @@
 
 sed -i.bak -e 's/^#AddressFamily.*$/AddressFamily inet/' /etc/ssh/sshd_config
 systemctl reload sshd
-wget -q https://github.com/la5nta/pat/releases/download/v0.18.0/pat_0.18.0_linux_amd64.deb
+wget -q https://github.com/la5nta/pat/releases/download/v0.19.2/pat_0.19.2_linux_amd64.deb
 dpkg -i pat*.deb
 apt-get update
 apt-get install -y xauth
