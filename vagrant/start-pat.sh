@@ -1,4 +1,4 @@
 #!/bin/bash
-su vagrant -c "pat updateforms"
+su vagrant -c "pat templates update"
 systemctl restart pat@vagrant
 systemctl status pat@vagrant
