@@ -77,6 +77,22 @@ etc/default/ax25 sets `DEV=/dev/ttyUSB0` so change it to `/dev/mytnc`. See [inst
 
 ## Set up pat
 
+On Windows, the guest uses a private local Linux configuration in
+`vagrant/config.json`. This file is ignored by Git because it contains the
+Winlink password. Manually stash a private backup outside this repository and
+restore it to `vagrant/config.json` after cloning; Git will not preserve it.
+Update the password in that private copy after changing your Winlink password.
+Edit that file for guest settings; provisioning does
+not copy the native Windows Pat configuration. On macOS, provisioning copies
+`~/Library/Application Support/pat/config.json` from the host as before.
+Both hosts still share their native Pat mailbox directory with the guest.
+
+After changing the configuration, apply it and restart Pat with:
+
+```sh
+vagrant provision --provision-with pat-config,start-pat
+```
+
 Initial setup involves running `pat configure` on the Mac to set the various
 options such as the password, etc.  Here's a snippet from my configuration:
 
@@ -98,7 +114,8 @@ In theory, `vagrant up` and then opening `http://localhost:8080` from the Mac
 browser should do it. In practice you may need to do a few things:
 
 ```
-$ vagrant ssh
+
+$ ssh -F .vagrant/ssh-config default
   ...
 $ sudo systemctl status ax25
 $ sudo systemctl stop ax25
@@ -125,6 +142,24 @@ pat git repo along with the [delve](github.com/go-delve/delve) debugger.
 
 To build and run this from scratch, simply do `vagrant up`.
 
+The Debian 13 Bento box includes VirtualBox Guest Additions. The Vagrantfile
+disables automatic updates by `vagrant-vbguest` so a host/guest version mismatch
+does not trigger a rebuild against an old kernel whose headers Debian no longer
+publishes. If an earlier `vagrant up` stopped with package 404s or
+`Unable to locate package linux-headers-...`, retry with `vagrant up --provision`
+after applying this setting. The VM does not need to be destroyed.
+
+If Guest Additions actually need rebuilding (for example, shared folders fail
+to mount), first install a current kernel and matching headers, then reboot
+before invoking the plugin manually:
+
+```sh
+vagrant ssh -c "sudo apt-get update && sudo apt-get install -y linux-image-amd64 linux-headers-amd64 build-essential dkms"
+vagrant reload --no-provision
+vagrant vbguest --do install
+vagrant reload --provision
+```
+
 Once configured, there are a number of Vagrant provisioner scripts defined
 that you can invoke via `vagrant provision --provision-with <provisioner>`
 
@@ -132,7 +167,7 @@ that you can invoke via `vagrant provision --provision-with <provisioner>`
 | ----------- | -------- | --- |
 | install     | installs pat, ax25, etc. | [install.sh](./install.sh) |
 | start       | start ax25 and pat | [start.sh](./start.sh) |
-| pat-config  | copies my MacOS Pat config into the vagrant box | \~/Library/Application Support/pat/config.json |
+| pat-config  | copies the private local config on Windows, or the host config on macOS, into the guest | `vagrant/config.json` (Windows, manually restored); \~/Library/Application Support/pat/config.json (macOS) |
 | minicom     | configures mincom defaults | [minirc.dfl](./minirc.dfl) |
 | gitconfig   | copies my personal .gitconfig into the vagrant box | \~/.gitconfig |
 | ssh         | copes my personal ssh keys into the vagrant box | \~/.ssh/id_rsa |

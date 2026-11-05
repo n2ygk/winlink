@@ -1,21 +1,38 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
 
-required_plugins = %w( vagrant-vbguest )
-required_plugins.each do |plugin|
-    exec "vagrant plugin install #{plugin};vagrant #{ARGV.join(" ")}" unless Vagrant.has_plugin? plugin || ARGV[0] == 'plugin'
+# vagrant-vbguest 0.32.0 calls File.exists?, which Ruby 3.2 removed.
+# Restore the alias while the plugin still needs it, including after reinstalls.
+class << File
+  alias_method :exists?, :exist? unless method_defined?(:exists?)
+end
+
+if Vagrant::Util::Platform.windows?
+  host_home = ENV.fetch("USERPROFILE").tr("\\", "/")
+  # Windows Pat's directory is used only for the shared mailbox.
+  pat_dir = File.join(ENV.fetch("LOCALAPPDATA").tr("\\", "/"), "pat")
+  # Provision the guest from the private config beside this Vagrantfile.
+  pat_config_source = File.expand_path("config.json", __dir__)
+else
+  host_home = Dir.home
+  pat_dir = File.join(host_home, "Library", "Application Support", "pat")
+  pat_config_source = File.join(pat_dir, "config.json")
 end
 
 Vagrant.configure("2") do |config|
-  config.vm.box = "generic/debian11"
+  config.vagrant.plugins = ["vagrant-vbguest"]
+  config.vm.box = "bento/debian-13"
+  # Use the box's bundled Guest Additions. Rebuilding for an old box kernel
+  # fails once Debian removes its matching headers from the repositories.
+  config.vbguest.auto_update = false
   config.vm.box_check_update = false
   config.vm.network "forwarded_port", guest: 8080, host: 8080
   config.ssh.forward_agent = true
   config.ssh.forward_x11 = true
-  config.vm.synced_folder "~/Library/Application Support/pat/mailbox", "/home/vagrant/.local/share/pat/mailbox"
+  config.vm.synced_folder File.join(pat_dir, "mailbox"), "/home/vagrant/.local/share/pat/mailbox"
   config.vm.synced_folder ".", "/vagrant"
-  config.vm.synced_folder "~/src", "/home/vagrant/src"
-  config.vm.synced_folder "~/.gnupg", "/home/vagrant/.gnupg"
+  config.vm.synced_folder File.join(host_home, "src"), "/home/vagrant/src"
+  config.vm.synced_folder File.join(host_home, ".gnupg"), "/home/vagrant/.gnupg"
   # Enable USB Controller on VirtualBox
   config.vm.provider "virtualbox" do |vb|
     vb.customize ["modifyvm", :id, "--usb", "on"]
@@ -53,7 +70,7 @@ Vagrant.configure("2") do |config|
                       path: "install.sh"
   config.vm.provision "pat-config",
                       type: "file",
-                      source: "~/Library/Application Support/pat/config.json",
+                      source: pat_config_source,
                       destination: "~vagrant/.config/pat/config.json"
   config.vm.provision "minicom",
                       type: "file",
@@ -61,12 +78,12 @@ Vagrant.configure("2") do |config|
                       destination: "~vagrant/.minirc.dfl"
   config.vm.provision "gitconfig",
                       type: "file",
-                      source: "~/.gitconfig",
+                      source: File.join(host_home, ".gitconfig"),
                       destination: "~vagrant/.gitconfig",
                       run: "always"
   config.vm.provision "ssh",
                       type: "file",
-                      source: "~/.ssh/id_rsa",
+                      source: File.join(host_home, ".ssh", "id_rsa"),
                       destination: "~vagrant/.ssh/id_rsa",
                       run: "always"
   config.vm.provision "start-pat",

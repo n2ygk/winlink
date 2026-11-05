@@ -15,7 +15,7 @@ apt-get install -y minicom
 apt-get install -y ax25-tools
 apt-get install -y ax25-apps
 apt-get install -y tmd710-tncsetup
-apt-get install -y soundmodem
+# apt-get install -y soundmodem
 apt-get install -y alsa-utils
 # apt-get install -y libasound2-dev
 # apt-get install -y libudev-dev
