@@ -1,0 +1,10 @@
+# GPS receiver to reopen on boot and after a gpsd service restart.
+# Use its USB identity, since ttyACM numbering can change.
+DEVICES="/dev/serial/by-id/usb-u-blox_AG_-_www.u-blox.com_u-blox_7_-_GPS_GNSS_Receiver-if00"
+
+# Poll even when no client is connected; retain USB hotplug support.
+GPSD_OPTIONS="-n"
+USBAUTO="true"
+
+# Referenced by Debian 13's gpsd.service alongside GPSD_OPTIONS.
+OPTIONS=""

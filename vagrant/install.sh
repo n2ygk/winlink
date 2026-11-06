@@ -25,6 +25,10 @@ usermod -G dialout -a vagrant
 # apparently ipv6 is not configured (properly):
 sed -i.bak -e 's/^BindIPv6Only=yes/#BindIPv6Only=yes/' \
            -e 's/^ListenStream=\[::1\]:2947/#ListenStream=[::1]:2947/' /lib/systemd/system/gpsd.socket
+# Reopen the GPS on service restarts as well as USB hotplug events.
+install -m 0644 /vagrant/gpsd /etc/default/gpsd
+systemctl daemon-reload
+systemctl restart gpsd.service
 # winlink/pat:
 echo "wl2k N2YGK 9600 128 7 Winlink" >/etc/ax25/axports
 /usr/share/pat/ax25/install-systemd-ax25-unit.bash

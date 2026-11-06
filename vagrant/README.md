@@ -29,7 +29,20 @@ sed -i.bak -e 's/^BindIPv6Only=yes/#BindIPv6Only=yes/' \
            -e 's/^ListenStream=[::1]:2947/#ListenStream=[::1]:2947/' /lib/systemd/system/gpsd.socket
 ```
 
-Use `gpsmon` to monitor the GPS.
+The [gpsd defaults](./gpsd) configure the u-blox 7 receiver using its stable
+`/dev/serial/by-id/` path. Provisioning installs this as `/etc/default/gpsd`, so
+restarting gpsd reopens the receiver without requiring a USB unplug/replug.
+`GPSD_OPTIONS="-n"` keeps the receiver polled with no clients connected, and
+`OPTIONS=""` avoids Debian 13's unset-environment-variable warning.
+
+Use `cgps 127.0.0.1:2947` to monitor gpsd's data, or
+`gpsmon 127.0.0.1:2947` for GPS diagnostics. Specify IPv4 explicitly because this
+setup disables the IPv6 socket; Debian 13's gpsmon can fail when using its
+default `localhost` connection with `gps_sock_send()` / `Read error from device`.
+A running
+daemon with no registered devices is different from a detected GPS with no
+satellite fix; check the receiver and USB passthrough before investigating
+reception.
 
 ## Set up AX25 KISS
 
